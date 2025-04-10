@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Test</title>
+    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            background: #4361ee;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #3a56d4;
+        }
+        .loading {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Payment (₹99)</h1>
+    <button id="payButton">Pay Now</button>
+    <div id="loading" class="loading">
+        Processing payment...
+    </div>
+
+    <script>
+        const cashfree = new Cashfree({ mode: "production" }); // Change to sandbox for testing
+        
+        document.getElementById("payButton").addEventListener("click", async () => {
+            const loading = document.getElementById("loading");
+            loading.style.display = "block";
+            
+            try {
+                // Call backend to create order
+                const response = await fetch("/api/create-order", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ amount: 99 })
+                });
+
+                if (!response.ok) throw new Error("Payment setup failed");
+                
+                const { paymentSessionId } = await response.json();
+                
+                // Open Cashfree checkout
+                cashfree.checkout({
+                    paymentSessionId,
+                    redirectTarget: "_self"
+                });
+                
+            } catch (error) {
+                alert("Error: " + error.message);
+                console.error(error);
+            } finally {
+                loading.style.display = "none";
+            }
+        });
+    </script>
+</body>
+</html>
